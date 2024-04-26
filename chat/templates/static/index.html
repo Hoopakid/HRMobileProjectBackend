@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WebSocket Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #chat_messages {
+        overflow-y: scroll;
+        max-height: 300px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+    }
+
+    #chat_messages p {
+        margin: 5px 0;
+    }
+
+    /* Input and button styling */
+    input[type="text"], input[type="file"], button {
+        margin-top: 10px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+</style>
+<body>
+<div id="chat-container" class="container">
+    <div id="chat_messages"></div>
+    <br>
+    <input id="messageInput" type="text" placeholder="Type your message..."/>
+    <input id="fileInput" type="file"/>
+    <button id="sendButton" type="submit">Send</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+        crossorigin="anonymous"></script>
+<script>
+    let key = localStorage.getItem('key')
+    let receiver_id = localStorage.getItem('receiver_id')
+    let user_id = localStorage.getItem('user_id')
+    const socket = new WebSocket(`ws://127.0.0.1:8000/chat/ws/${key}`);
+    const chatMessages = document.getElementById('chat_messages');
+    const messageInput = document.getElementById('messageInput');
+    const fileInput = document.getElementById('fileInput');
+    const sendButton = document.getElementById('sendButton');
+
+    socket.onmessage = (event) => {
+        const message = event.data;
+        if (message.toString().startsWith("data:image/png;base64,") ||
+            message.toString().startsWith("data:image/jpeg;base64,") ||
+            message.toString().startsWith("data:image/jpg;base64,") ||
+            message.toString().startsWith("data:image/bmp;base64,") ||
+            message.toString().startsWith("data:image/gif;base64,") ||
+            message.toString().startsWith("data:image/tiff;base64,")
+        ) {
+            imgData = `<img src=${message} style="max-width: 300px;width: 100px;"/>`
+            if (user_id == receiver_id) {
+                chatMessages.innerHTML += `<p style="text-align: left">${imgData}</p>`;
+            }
+            if (user_id != receiver_id) {
+                chatMessages.innerHTML += `<p style="text-align: right">${imgData}</p>`;
+            }
+        } else {
+            if (user_id == receiver_id) {
+                chatMessages.innerHTML += `<p style="text-align: left">${message}</p>`
+            }
+            if (user_id != receiver_id) {
+                chatMessages.innerHTML += `<p style="text-align: right">${message}</p>`
+            }
+        }
+    };
+    sendButton.addEventListener('click', () => {
+        const message = messageInput.value
+        const sendFile = fileInput.files[0];
+        if (sendFile) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const fileData = event.target.result;
+                socket.send(fileData);
+                fetch('http://127.0.0.1:8000/ws/send-message', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${key}`,
+                        accept: 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: fileData,
+                        receiver: receiver_id
+                    })
+                })
+                    .then(response => response.json())
+                    .then(res => console.log(res))
+            };
+            reader.readAsDataURL(sendFile);
+            fileInput.value = ''
+        }
+        if (message) {
+            socket.send(message)
+            let token = localStorage.getItem('access')
+            fetch('http://127.0.0.1:8000/chat/ws/send-message', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    accept: 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    receiver: receiver_id
+                })
+            })
+                .then(response => response.json())
+                .then(res => console.log(res))
+            messageInput.value = ''
+        }
+    });
+    window.onload = () => {
+        let token = localStorage.getItem('access');
+        let url = `http://127.0.0.1:8000/chat/ws/messages?receiver_id=${receiver_id}`;
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+        })
+            .then(response => response.json())
+            .then(res => {
+                for (let msg of res) {
+                    if (msg.message.toString().startsWith("data:image/png;base64,") ||
+                        msg.message.toString().startsWith("data:image/jpeg;base64,") ||
+                        msg.message.toString().startsWith("data:image/jpg;base64,") ||
+                        msg.message.toString().startsWith("data:image/bmp;base64,") ||
+                        msg.message.toString().startsWith("data:image/gif;base64,") ||
+                        msg.message.toString().startsWith("data:image/tiff;base64,")
+                    ) {
+                        imgData = `<img src=${msg.message} style="max-width: 300px;width: 100px;"/>`
+                        if (user_id == msg.sender_id)
+                            chatMessages.innerHTML += `<p style="text-align: right">${imgData}</p>`;
+                        else {
+                            chatMessages.innerHTML += `<p>${imgData}</p>`;
+                        }
+                    } else {
+                        if (user_id == msg.sender_id) {
+                            chatMessages.innerHTML += `<p style="text-align: right">${msg.message}</p>`;
+                        } else {
+                            chatMessages.innerHTML += `<p>${msg.message}</p>`;
+                        }
+                    }
+                }
+                console.log(res)
+            })
+    }
+</script>
+</body>
+</html>

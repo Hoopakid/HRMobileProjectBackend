@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Login Page</title>
+</head>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #000;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    form {
+        background-color: #333;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+        width: 300px;
+        text-align: center;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 15px;
+        color: #fff;
+        font-size: 16px;
+    }
+
+    input {
+        width: calc(100% - 30px);
+        padding: 10px;
+        margin-bottom: 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #555;
+        color: #fff;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+    button {
+        width: calc(100% - 30px);
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        background-color: #000;
+        color: #fff;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    button:hover {
+        background-color: #222;
+    }
+
+    button:focus {
+        outline: none;
+    }
+
+    h1 {
+        color: #fff;
+        margin-bottom: 30px;
+        font-size: 24px;
+    }
+</style>
+<body>
+<form method="post" id="login_form">
+    <label for="email">Email</label>
+    <input type="email" name="email" id="email" placeholder="Enter your email"/><br>
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" placeholder="Enter you password"/><br>
+    <button type="submit"> OK</button>
+</form>
+<script>
+    document.getElementById('login_form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        fetch('http://127.0.0.1:8000/auth/login', {
+            method: 'POST',
+            headers: {
+                accept: 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email.value,
+                password: password.value
+            })
+        })
+            .then(response => response.json())
+            .then(res => {
+                setCookie(res.access_token, res.refresh_token)
+                get_user_data(res.access_token)
+            })
+    })
+    const setCookie = (access, refresh) => {
+        localStorage.setItem("access", access);
+        localStorage.setItem("refresh", refresh)
+    }
+
+    const get_user_data = (token) => {
+        fetch('http://127.0.0.1:8000/auth/user/user-info', {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                accept: 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(res => {
+                localStorage.setItem('user_id', res.id)
+                localStorage.setItem('first_name', res.first_name)
+                localStorage.setItem('last_name', res.last_name)
+                localStorage.setItem('email', res.email)
+                window.location.href = 'contacts.html'
+            })
+    }
+</script>
+</body>
+</html>
