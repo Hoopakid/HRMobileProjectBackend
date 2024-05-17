@@ -133,12 +133,24 @@ class AdditionForTasks(Base):
 #     question = relationship("questions", back_populates="choices")
 
 
-# class UserMessagesToAdminViaTask(Base):
-#     __tablename__ = "user_messages_to_admin_via_task"
-#     metadata = metadata
-#     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-#     message = Column(String)
-#     sender_id = Column(Integer, ForeignKey("users.id"))
-#     task_id = Column(Integer, ForeignKey("users.id"))
-#     receiver_id = Column(Integer, ForeignKey("users.id"))
-#     sent_at = Column(TIMESTAMP, default=datetime.utcnow)
+class UserMessagesToAdminViaTask(Base):
+    __tablename__ = "user_messages_to_admin_via_task"
+    metadata = metadata
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    message = Column(String, nullable=True)
+    voice = Column(String, nullable=True)
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    task_id = Column(Integer, ForeignKey("tasks.id"))
+    receiver_id = Column(Integer, ForeignKey("users.id"))
+    sent_at = Column(TIMESTAMP, default=datetime.utcnow)
+
+
+class SupportForUser(Base):
+    __tablename__ = "support_for_user"
+    metadata = metadata
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    message = Column(String, nullable=False)
+    voice = Column(String, nullable=False)
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    receiver_id = Column(Integer, ForeignKey("users.id"))
+    sent_at = Column(TIMESTAMP, default=datetime.utcnow)

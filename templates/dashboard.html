@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/dashboard.css">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://kit.fontawesome.com/f8b8bea0a5.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="left-section">
+        <a href="#" class="active" id="dashboard"><i class="fa-solid fa-table-columns"></i>Dashboard</a>
+        <a href="#" id="tasks"><i class="fa-solid fa-bars-progress"></i>Vazifalar</a>
+        <a href="#" id="education"><i class="fa-solid fa-book-open"></i>Ta'lim</a>
+        <a href="#" id="messenger"><i class="fa-brands fa-facebook-messenger"></i> Messenger</a>
+        <a href="#" id="admin"><i class="fa-solid fa-user-shield"></i> Admin harakati</a>
+        <a href="#" id="staff"><i class="fa-solid fa-users-gear"></i> Xodimlar</a>
+        <a href="#" id="support"><i class="fa-solid fa-headset"></i> Support</a>
+    </div>
+    <div class="chart">
+        <canvas id="myChart"></canvas>
+    </div>
+</div>
+<script src="/static/dashboard.js" defer></script>
+
+</body>
+</html>
